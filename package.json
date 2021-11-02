@@ -1,0 +1,31 @@
+{
+  "name": "xico",
+  "version": "1.0.0",
+  "description": "x Token ICO",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShashiKumarMani/xICO.git"
+  },
+  "author": "Shashi Kumar M",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ShashiKumarMani/xICO/issues"
+  },
+  "homepage": "https://github.com/ShashiKumarMani/xICO#readme",
+  "dependencies": {
+    "@chainlink/contracts": "^0.2.2",
+    "@openzeppelin/contracts": "^4.3.2"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "chai": "^4.3.4",
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.5.1",
+    "hardhat": "^2.6.7"
+  }
+}
