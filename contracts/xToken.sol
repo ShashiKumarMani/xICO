@@ -19,7 +19,7 @@ contract XToken is ERC20, Ownable {
         return _cap;
     }
 
-    function _mint(address account, uint256 amount) internal override onlyOwner {
+    function mint(address account, uint256 amount) external onlyOwner {
         require(ERC20.totalSupply() <= cap(), "ERC20Capped: cap exceeded");
         ERC20._mint(account, amount);
     }
