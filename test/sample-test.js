@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("xToken", function () {
+describe("xToken",  () => {
   let xToken;
   let owner;
   let account1;
@@ -35,14 +35,9 @@ describe("xToken", function () {
     });
 
     it("Call mint from different account", async () => {
-        xToken.connect(account1.address)
-          .mint(account1.address, 20_000_000_000)
-          .then(result => {
-            console.log("result", result);
-          })
-          .catch(error => {
-          console.log(error);
-        })
+        await expect(
+          xToken.connect(account1.address).mint(account1.address, 20_000_000_000)
+        ).to.be.reverted;
     });
 
     it("Mint Initial Tokens", async() => {
@@ -63,62 +58,62 @@ describe("xToken", function () {
       await xToken.mint(account5.address, BOUNTIES_AIRDROP_WALLET);
       await xToken.mint(owner.address, TOKENSALE_WALLET);
 
-      console.log("Total Supply",BigInt(await xToken.totalSupply()));
-
       expect(await xToken.totalSupply()).to.equal(50_000_000_000);
     })
 
     it("Cap Exceeded", async ()=> {
-      console.log("Total Supply",BigInt(await xToken.totalSupply()));
-      await xToken.mint(owner.address, 50_000_000_001);
-      console.log("Total Supply",BigInt(await xToken.totalSupply()));
 
-      // ? revertedWith not working
-      try {
-        expect(await xToken.mint(owner.address, 50_000_000_000)).to.be.revertedWith('ERC20Capped: cap exceeded');
-      } catch(error) {
-        console.log(error);
-      }
+      await xToken.mint(owner.address, 50_000_000_001);
+      await expect(xToken.mint(owner.address, 50_000_000_000)).to.be.reverted;
+
     });
   });
 });
 
+describe("XTokenSale", () => {
 
-describe("XTokenSale", function() {
   let xToken;
   let xTokenSale;
   let owner;
   let account1;
+  const  priceFeed = "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e";
 
   beforeEach(async () => {
+  
     const XToken = await ethers.getContractFactory("XToken");
     xToken = await XToken.deploy("xToken", "EX", 50_000_000_000);
     let res = await xToken.deployed();
-    [owner, account1] = await ethers.getSigners();
-    const date = new Date();
 
-    // One hour after deployment incl mining
-    let open = Math.floor(date.getTime() / 1000) + (60 * 60);
+    [owner, account1] = await ethers.getSigners();
+
+    const date = new Date();
+    let open = Math.floor(date.getTime() / 1000) + 60;
     let close = open + (30*24*60*60);
 
     const XTokenSale = await ethers.getContractFactory("XTokenSale");
-    // Aggregator not used
-    xTokenSale = await XTokenSale.deploy(1000, account1.address, xToken.address, 12_500_000_000, open, close, xToken.address);
+    xTokenSale = await XTokenSale.deploy(1000, account1.address, xToken.address, 12_500_000_000, open, close, priceFeed);
     await xTokenSale.deployed();
   });
 
   describe("Constructor", async() => {
-
     it("Cap", async () => {
       expect(await xTokenSale.cap()).to.be.equal(12_500_000_000);
     });
   });
 
   describe("Open", () => {
-
-    // opens after 60*60 seconds
     it("open false", async () => {
         expect(await xTokenSale.isOpen()).to.be.equal(false);
     });
-  })
+  });
+
+  describe("Oracle ", async() => {
+
+    it("Get oracle price data", async () => {
+      await xTokenSale.getOracleData();
+      expect(await xTokenSale.ethToUsd()).to.not.equal(0);
+      console.log(await xTokenSale.ethToUsd());
+    });
+
+  });
 }); 
