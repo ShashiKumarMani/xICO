@@ -11,28 +11,27 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract XTokenSale is Pausable, AccessControl, Ownable {
 
-    uint256 public bonus;
-    uint256 public ethToUsd;
-    uint256 private _rate;
-    uint256 private _weiRaised;
-    address payable private _wallet;
-    IERC20 private _token;
-    uint256 private _openingTime;
-    uint256 private _closingTime;
-    uint256 private _cap;
-
     using SafeERC20 for IERC20;
     using SafeCast for int256;
-
-    enum XTokenSaleRound { PrivateSale, PreSale, CrowdSale }
-
-    XTokenSaleRound round = XTokenSaleRound.PrivateSale;
 
     bytes32 public constant PRIVATE_SALE = keccak256("PRIVATE");
     bytes32 public constant PRE_SALE = keccak256("PRESALE");
     bytes32 public constant CROWD_SALE = keccak256("CROWDSALE");
 
+    enum XTokenSaleRound { PrivateSale, PreSale, CrowdSale }
+    
+    uint256 public bonus;
+    uint256 public ethToUsd;
+    uint256 private _rate;
+    address payable private _wallet;
+    uint256 private _weiRaised;
+    uint256 private _openingTime;
+    uint256 private _closingTime;
+    uint256 private _cap;
+
+    IERC20 private _token;
     AggregatorV3Interface internal pricefeed;
+    XTokenSaleRound round = XTokenSaleRound.PrivateSale;
 
     constructor (
         uint256 rate_, 
