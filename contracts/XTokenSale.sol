@@ -33,6 +33,9 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
     AggregatorV3Interface internal pricefeed;
     XTokenSaleRound round = XTokenSaleRound.PrivateSale;
 
+    event BuyTokens(address recipient, uint256 tokens, XTokenSaleRound round);
+    event UpdateRoundAndBonus(XTokenSaleRound round, uint256 bonus);
+
     constructor (
         uint256 rate_, 
         address payable wallet_, 
@@ -106,6 +109,7 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         // Forward collected wei
         _forwardFunds();
 
+        emit BuyTokens(recipient, tokens, round);
     }
 
     // Round changing and bonus
@@ -132,6 +136,8 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
             bonus = _rate * (5 / temp); 
         
         }
+
+        emit UpdateRoundAndBonus(round, bonus);
     }
 
     // Chainlink called once a week
