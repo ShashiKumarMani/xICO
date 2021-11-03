@@ -1,5 +1,5 @@
-
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.9;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -9,6 +9,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
+/**
+ * @dev XTokenSale is the contract used to manage the Initial Coin Offering of the xToken
+ * Investors can make a investment and obtain xTokens using the buyTokens functions
+ *
+*/
 contract XTokenSale is Pausable, AccessControl, Ownable {
 
     using SafeERC20 for IERC20;
@@ -18,6 +23,9 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
     bytes32 public constant PRE_SALE = keccak256("PRESALE");
     bytes32 public constant CROWD_SALE = keccak256("CROWDSALE");
 
+    /**
+     * @dev enum used to denote current sale round of the ICO
+     */
     enum XTokenSaleRound { PrivateSale, PreSale, CrowdSale }
     
     uint256 public bonus;
@@ -29,13 +37,43 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
     uint256 private _closingTime;
     uint256 private _cap;
 
+    /**
+     * @dev Tokens of the ICO
+     */
     IERC20 private _token;
+
+    /**
+     * @dev Chainlink pricefeed contract
+     */
     AggregatorV3Interface internal pricefeed;
+
+    /**
+     * @dev Sale round of the ICO
+     */
     XTokenSaleRound round = XTokenSaleRound.PrivateSale;
 
+    /**
+     * @param recipient the recipient of the token being purchased
+     * @param tokens number of tokens being purchased
+     * @param round current round of ICO
+     */
     event BuyTokens(address recipient, uint256 tokens, XTokenSaleRound round);
+
+    /**
+     * @param round current round of ICO
+     * @param bonus bonus value based on the current round of the ICO
+     */
     event UpdateRoundAndBonus(XTokenSaleRound round, uint256 bonus);
 
+    /**
+     * @param rate_ rate of token exchange Number of token per *dollars*
+     * @param wallet_ address to send wei
+     * @param token_ token of the ICO
+     * @param cap_ Maximum tokens in the ICO
+     * @param openingTime_ opening time of the ICO
+     * @param closingTime_ ending time of the ICO
+     * @param pricefeed_ address of the chainlink ETH/USD Aggregator contract
+     */
     constructor (
         uint256 rate_, 
         address payable wallet_, 
@@ -60,20 +98,32 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         _closingTime = closingTime_;
     }
 
+    /**
+     * @dev Allows execution only between opening and closing time
+     */
     modifier onlyWhileOpen {
         require(isOpen(), "XTokenSale: not open");
         _;
     }
 
+    /**
+     * @return boolean value based on the open or close of the ICO
+     */
     function isOpen() public view returns (bool) {
         return block.timestamp >= _openingTime && block.timestamp <= _closingTime;
     }
 
+    /**
+     * @return the cap limit of the ICO
+     */
     function cap() public view returns (uint256) {
         return _cap;
     }
 
-    // Whitelist investors using AccessControl
+    /**
+     * @dev main function used by investors to buy tokens
+     * @param recipient the recipient of the token being purchased
+     */
     function buyTokensRestricted(address recipient) 
         external 
         payable 
@@ -112,8 +162,11 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         emit BuyTokens(recipient, tokens, round);
     }
 
-    // Round changing and bonus
-    function  updateRoundAndBonus() external onlyOwner {
+    /**
+     * @dev function to update round and bonus of the ICO
+     * Is accessible only to the owner by onlyOwner modifier
+     */
+    function updateRoundAndBonus() external onlyOwner {
         
         uint256 temp = 100;
 
@@ -140,7 +193,10 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         emit UpdateRoundAndBonus(round, bonus);
     }
 
-    // Chainlink called once a week
+    /**
+     * @dev function used to get the oracle price data 
+     * Executed once a week
+     */
     function getOracleData() external onlyOwner  {
 
         (
@@ -154,10 +210,17 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         ethToUsd = answer.toUint256() / 1e8;
     }
 
+    /**
+     * @dev function used to forward funds to the wallet 
+     * Executes on every buyTokens function call by an investor
+     */
     function _forwardFunds() internal {
         _wallet.transfer(msg.value);
     }
 
+    /**
+     * @dev function used to validate beneficiary, wei amount and cap amount
+     */
     function validate(address beneficiary, uint256 weiAmount) internal view {
         require(beneficiary != address(0), "XTokenSale: beneficiary is zero address");
         require(weiAmount != 0, "XTokenSale: weiAmount is 0");
