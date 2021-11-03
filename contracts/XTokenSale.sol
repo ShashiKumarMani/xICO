@@ -73,7 +73,7 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
      * @param rate_ rate of token exchange Number of token per *dollars*
      * @param wallet_ address to send wei
      * @param token_ token of the ICO
-     * @param cap_ Maximum tokens in the ICO
+     * @param cap_ The target Eth of the ICO
      * @param openingTime_ opening time of the ICO
      * @param closingTime_ ending time of the ICO
      * @param pricefeed_ address of the chainlink ETH/USD Aggregator contract
@@ -194,6 +194,8 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         } else if (block.timestamp <= openTime + 53 days) {
             bonus = _rate * (5 / temp); 
         
+        } else {
+            bonus = 0;
         }
 
         emit UpdateRoundAndBonus(round, bonus);
