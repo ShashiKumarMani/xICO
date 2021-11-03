@@ -11,8 +11,8 @@ import "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract XTokenSale is Pausable, AccessControl, Ownable {
 
-    uint public bonus;
-    uint public ethToUsd;
+    uint256 public bonus;
+    uint256 public ethToUsd;
     uint256 private _rate;
     uint256 private _weiRaised;
     address payable private _wallet;
@@ -34,12 +34,20 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
 
     AggregatorV3Interface internal pricefeed;
 
-    constructor (uint256 rate_, address payable wallet_, IERC20 token_, uint256 cap_, uint256 openingTime_, uint256 closingTime_ ) 
+    constructor (
+        uint256 rate_, 
+        address payable wallet_, 
+        IERC20 token_, 
+        uint256 cap_, 
+        uint256 openingTime_, 
+        uint256 closingTime_ ) 
     {
         _rate = rate_;
         _wallet = wallet_;
         _token = token_;
+
         pricefeed = AggregatorV3Interface(0x8A753747A1Fa494EC906cE90E9f37563A8AF630e);
+        
         require(cap_ > 0);
         _cap = cap_;
 
@@ -62,14 +70,8 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         return _cap;
     }
 
-    function validate(address beneficiary, uint256 weiAmount) internal view {
-        require(beneficiary != address(0), "XTokenSale: beneficiary is zero address");
-        require(weiAmount != 0, "XTokenSale: weiAmount is 0");
-        require(_weiRaised + weiAmount <= _cap, "XTokenSale: cap exceeded");
-    }
-
     // Whitelist investors using AccessControl
-    function buyTokensRestricted(address recipient) public payable onlyWhileOpen whenNotPaused{
+    function buyTokensRestricted(address recipient) external payable onlyWhileOpen whenNotPaused {
 
         validate(recipient, msg.value);
 
@@ -101,27 +103,33 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
     }
 
     // Round changing and bonus
-    function  updateRoundAndBonus() private onlyOwner {
+    function  updateRoundAndBonus() external onlyOwner {
         
         uint256 temp = 100;
 
-        if(block.timestamp <= _openingTime + 53 days) {
-            bonus = _rate * (5 / temp); 
-        }  else if(block.timestamp <= _openingTime + 44 days) {
-            bonus = _rate * (10 / temp); 
-        } else if(block.timestamp <= _openingTime + 37 days) {
-            bonus = _rate * (15 / temp); 
+        if(block.timestamp <= _openingTime + 15 days) {
+            bonus = _rate * (25 / temp);
+            round = XTokenSaleRound.PrivateSale;
+
         } else if(block.timestamp <= _openingTime + 30 days) {
             bonus = _rate * (20 / temp);
-            round = XTokenSaleRound.CrowdSale;
-        } else if(block.timestamp <= _openingTime + 15 days) {
-            bonus = _rate * (25 / temp);
             round = XTokenSaleRound.PreSale;
+
+        } else if(block.timestamp <= _openingTime + 37 days) {
+            bonus = _rate * (15 / temp); 
+            round = XTokenSaleRound.CrowdSale;
+        
+        } else if(block.timestamp <= _openingTime + 44 days) {
+            bonus = _rate * (10 / temp); 
+        
+        } else if (block.timestamp <= _openingTime + 53 days) {
+            bonus = _rate * (5 / temp); 
+        
         }
     }
 
-    // Chainlink Called once a week
-    function getOracleData() private onlyOwner  {
+    // Chainlink called once a week
+    function getOracleData() external onlyOwner  {
 
         (
             uint80 roundId,
@@ -136,5 +144,11 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
 
     function _forwardFunds() internal {
         _wallet.transfer(msg.value);
+    }
+
+    function validate(address beneficiary, uint256 weiAmount) internal view {
+        require(beneficiary != address(0), "XTokenSale: beneficiary is zero address");
+        require(weiAmount != 0, "XTokenSale: weiAmount is 0");
+        require(_weiRaised + weiAmount <= _cap, "XTokenSale: cap exceeded");
     }
 }
