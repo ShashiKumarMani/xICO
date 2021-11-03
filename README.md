@@ -143,3 +143,18 @@ CrowdSale
 ```
 Function used to update the round and calculate the bonus rate for the round
 This function has to be called by the owner manually.
+
+## Fallback and Receive
+
+The fallback and receive functions reverts on execution.
+This prevents eth being locked as there is no mechanism to transfer eth out of the contract except `buyTokens`.
+
+## Deployment
+
+Add .env file with environment variables of apikey and private key of the address
+Update config file network parameters to point to the mainnet or testnet
+Run the script file
+
+```
+npx hardhat run script/sample-script.js --network <network name>
+```
