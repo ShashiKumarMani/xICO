@@ -87,7 +87,7 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
 
         require(usd > 500, "buyTokens: Minimum value must be 500");
 
-        uint256 tokens = usd / _rate;
+        uint256 tokens = usd * _rate;
         tokens += tokens * bonus;
 
         if(round == XTokenSaleRound.PrivateSale) {
