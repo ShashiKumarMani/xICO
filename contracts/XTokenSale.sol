@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+
+pragma solidity 0.8.4;
 
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
@@ -19,9 +20,12 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
     using SafeERC20 for IERC20;
     using SafeCast for int256;
 
-    bytes32 public constant PRIVATE_SALE = keccak256("PRIVATE");
-    bytes32 public constant PRE_SALE = keccak256("PRESALE");
-    bytes32 public constant CROWD_SALE = keccak256("CROWDSALE");
+    /**
+     * @dev Keccak256 Hash of the variable names
+     */
+    bytes32 public constant PRIVATE_SALE = 0x3571fea4df417b4342013dd7494740b7b31b6312391409c91e671223e0d93261;
+    bytes32 public constant PRE_SALE = 0x07963c72e9d9113b8188da2def2bf51c73a463aac395358e61b4ace0a9e24621;
+    bytes32 public constant CROWD_SALE = 0xefdbaf9df092bcd35a7bf6113300a9cc5d21b347bdb6bd325fcf68d8b4138d76;
 
     /**
      * @dev enum used to denote current sale round of the ICO
@@ -124,7 +128,7 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
      * @dev main function used by investors to buy tokens
      * @param recipient the recipient of the token being purchased
      */
-    function buyTokensRestricted(address recipient) 
+    function buyTokens(address recipient) 
         external 
         payable 
         onlyWhileOpen 
@@ -135,31 +139,32 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
 
         uint usd = (msg.value / 1e18) * ethToUsd;
 
-        require(usd > 500, "buyTokens: Minimum value must be 500");
+        require(usd >= 500, "XTokenSale: Minimum value must be 500 Dollars");
 
         uint256 tokens = usd * _rate;
         tokens += tokens * bonus;
 
-        if(round == XTokenSaleRound.PrivateSale) {
+        XTokenSaleRound rnd = round;
 
-            require(hasRole(PRIVATE_SALE, recipient), "buyTokensRestricted: User is not on PrivateSale Whitelist");
-            _token.safeTransfer(recipient, tokens);
-        } else if(round == XTokenSaleRound.PreSale) {
+        if(rnd == XTokenSaleRound.PrivateSale) {
 
-            require(hasRole(PRE_SALE, recipient), "buyTokensRestricted: User is not on PreSale Whitelist");
-            _token.safeTransfer(recipient, tokens);
+            require(hasRole(PRIVATE_SALE, recipient), "XTokenSale: User is not on PrivateSale Whitelist");
+        } else if(rnd == XTokenSaleRound.PreSale) {
+
+            require(hasRole(PRE_SALE, recipient), "XTokenSale: User is not on PreSale Whitelist");
         } else {
 
-            require(hasRole(CROWD_SALE, recipient), "buyTokensRestricted: User is not on CrowdSales Whitelist");
-            _token.safeTransfer(recipient, tokens);
+            require(hasRole(CROWD_SALE, recipient), "XTokenSale: User is not on CrowdSales Whitelist");
         }
+        
+        _token.safeTransfer(recipient, tokens);
 
         _weiRaised += msg.value;
 
         // Forward collected wei
         _forwardFunds();
 
-        emit BuyTokens(recipient, tokens, round);
+        emit BuyTokens(recipient, tokens, rnd);
     }
 
     /**
@@ -169,23 +174,24 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
     function updateRoundAndBonus() external onlyOwner {
         
         uint256 temp = 100;
+        uint256 openTime = _openingTime;
 
-        if(block.timestamp <= _openingTime + 15 days) {
+        if(block.timestamp <= openTime + 15 days) {
             bonus = _rate * (25 / temp);
             round = XTokenSaleRound.PrivateSale;
 
-        } else if(block.timestamp <= _openingTime + 30 days) {
+        } else if(block.timestamp <= openTime + 30 days) {
             bonus = _rate * (20 / temp);
             round = XTokenSaleRound.PreSale;
 
-        } else if(block.timestamp <= _openingTime + 37 days) {
+        } else if(block.timestamp <= openTime + 37 days) {
             bonus = _rate * (15 / temp); 
             round = XTokenSaleRound.CrowdSale;
         
-        } else if(block.timestamp <= _openingTime + 44 days) {
+        } else if(block.timestamp <= openTime + 44 days) {
             bonus = _rate * (10 / temp); 
         
-        } else if (block.timestamp <= _openingTime + 53 days) {
+        } else if (block.timestamp <= openTime + 53 days) {
             bonus = _rate * (5 / temp); 
         
         }
