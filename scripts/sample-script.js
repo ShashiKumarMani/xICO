@@ -6,6 +6,7 @@
 const { ethers } = require("hardhat");
 const hre = require("hardhat");
 const { experimentalAddHardhatNetworkMessageTraceHook } = require("hardhat/config");
+require('dotenv').config();
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -20,16 +21,18 @@ async function main() {
   const xToken = await XToken.deploy("XToken", "EX", 50_000_000_000);
   await xToken.deployed();
 
-  console.log(xToken.address);
-  const walletAddress = "";
+  console.log("XToken deployed at", xToken.address);
+
+  const walletAddress = process.env.OWNER_ADDRESS;
   const date = new Date();
   const openingTime = Math.floor(date.getTime() / 1000) + 60;
   const closingTime = openingTime + (30*24*60*60);
-  const priceFeed = "";
+  const priceFeed = "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e";
 
   const XTokenSale = await hre.ethers.getContractFactory("XTokenSale");
   const xTokenSale = await XTokenSale.deploy(1000, walletAddress, xToken.address, 12_500_000_000, openingTime, closingTime, priceFeed);
   xTokenSale.deployed();
+  console.log("xTokenSale deployed at", xTokenSale.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
