@@ -39,13 +39,14 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         IERC20 token_, 
         uint256 cap_, 
         uint256 openingTime_, 
-        uint256 closingTime_ 
+        uint256 closingTime_ ,
+        address pricefeed_
     ) {
         _rate = rate_;
         _wallet = wallet_;
         _token = token_;
 
-        pricefeed = AggregatorV3Interface(0x8A753747A1Fa494EC906cE90E9f37563A8AF630e);
+        pricefeed = AggregatorV3Interface(pricefeed_);
         
         require(cap_ > 0);
         _cap = cap_;
