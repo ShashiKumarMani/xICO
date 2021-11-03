@@ -12,7 +12,7 @@ contract XToken is ERC20, Ownable {
         ERC20(name_, symbol_)
     {
         require(cap_ > 0, "ERC20: cap is 0");
-        _cap = cap_
+        _cap = cap_;
     }
  
     function cap() public view returns (uint256) {
