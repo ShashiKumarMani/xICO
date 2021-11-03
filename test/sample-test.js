@@ -114,6 +114,16 @@ describe("XTokenSale", () => {
       expect(await xTokenSale.ethToUsd()).to.not.equal(0);
       console.log(await xTokenSale.ethToUsd());
     });
-
   });
+
+    describe("Send eth", async() => {
+
+      it("Send eth to xTokenSale", async() => {
+
+        expect(owner.sendTransaction({
+          to: xTokenSale.address,
+          value: ethers.utils.parseEther("1")
+        })).to.be.reverted;
+      });
+    });
 }); 
