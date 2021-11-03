@@ -39,8 +39,8 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
         IERC20 token_, 
         uint256 cap_, 
         uint256 openingTime_, 
-        uint256 closingTime_ ) 
-    {
+        uint256 closingTime_ 
+    ) {
         _rate = rate_;
         _wallet = wallet_;
         _token = token_;
@@ -70,7 +70,12 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
     }
 
     // Whitelist investors using AccessControl
-    function buyTokensRestricted(address recipient) external payable onlyWhileOpen whenNotPaused {
+    function buyTokensRestricted(address recipient) 
+        external 
+        payable 
+        onlyWhileOpen 
+        whenNotPaused 
+    {
 
         validate(recipient, msg.value);
 
@@ -78,7 +83,8 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
 
         require(usd > 500, "buyTokens: Minimum value must be 500");
 
-        uint256 tokens = usd / _rate + bonus;
+        uint256 tokens = usd / _rate;
+        tokens += tokens * bonus;
 
         if(round == XTokenSaleRound.PrivateSale) {
 
