@@ -80,7 +80,7 @@ contract XTokenSale is Pausable, AccessControl, Ownable {
 
         validate(recipient, msg.value);
 
-        uint usd = msg.value / 18 * ethToUsd;
+        uint usd = (msg.value / 1e18) * ethToUsd;
 
         require(usd > 500, "buyTokens: Minimum value must be 500");
 
