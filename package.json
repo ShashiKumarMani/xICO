@@ -18,7 +18,8 @@
   "homepage": "https://github.com/ShashiKumarMani/xICO#readme",
   "dependencies": {
     "@chainlink/contracts": "^0.2.2",
-    "@openzeppelin/contracts": "^4.3.2"
+    "@openzeppelin/contracts": "^4.3.2",
+    "dotenv": "^10.0.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
